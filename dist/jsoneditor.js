@@ -2160,8 +2160,21 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     
     // Code editor
     if(this.source_code) {      
+      // CKEditor
+      if(this.options.ckeditor && this.options.wysiwyg &&
+        ['html','bbcode'].indexOf(this.input_type) >= 0 && 
+        window.jQuery && window.CKEDITOR
+      ) {
+		self.ckeditor_instance = window.CKEDITOR.replace(self.input);
+		self.ckeditor_instance.on('change', function(e) {
+          self.input.value = e.editor.getData(); // getData() returns CKEditor's HTML content.
+          self.value = self.input.value;
+          self.is_dirty = true;
+          self.onChange(true);
+		});
+	  }
       // WYSIWYG html and bbcode editor
-      if(this.options.wysiwyg && 
+      else if(this.options.wysiwyg && 
         ['html','bbcode'].indexOf(this.input_type) >= 0 && 
         window.jQuery && window.jQuery.fn && window.jQuery.fn.sceditor
       ) {
@@ -2254,8 +2267,12 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     this.serialized = this.value;
   },
   destroy: function() {
-    // If using SCEditor, destroy the editor instance
+    // If using CKEditor, destroy the editor instance
     if(this.sceditor_instance) {
+      this.ckeditor_instance.destroy();
+    }
+    // If using SCEditor, destroy the editor instance
+    else if(this.sceditor_instance) {
       this.sceditor_instance.destroy();
     }
     else if(this.epiceditor) {
